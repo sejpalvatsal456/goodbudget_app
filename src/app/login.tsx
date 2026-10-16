@@ -20,12 +20,16 @@ import {
   View,
 } from "react-native";
 
+const API_URL = process.env.EXPO_PUBLIC_API_URL as string;
+
 const LoginScreen = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleLogin = async () => {
     // Validate Email and Password
+    setIsLoading(true);
     if (!validateEmail(email.trim())) {
       Alert.alert("Invalid Email", "Please enter a valid email address.");
       return;
@@ -36,14 +40,17 @@ const LoginScreen = () => {
       return;
     }
 
+    const payload = {
+      identifier: email.trim(),
+      password: password,
+    };
+    // console.log(payload);
+
     try {
-      const res = await fetch("http://localhost:3000/auth/login", {
+      const res = await fetch(`${API_URL}/auth/login`, {
         method: "POST",
-        headers: { "Conten-Type": "application/json" },
-        body: JSON.stringify({
-          identifier: email.trim(),
-          password: password,
-        }),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
       });
 
       const data = await res.json();
@@ -53,15 +60,13 @@ const LoginScreen = () => {
         setEmail("");
         setPassword("");
 
-        Alert.alert(
-          "Login Failed",
-          data.message || "Invalid credentials. Please try again.",
-        );
+        Alert.alert("Login Failed", data.msg || "Unexpected Error");
         return;
       }
 
       // Store the access token securely
       await SecureStore.setItemAsync("accessToken", data.accessToken);
+      await SecureStore.setItemAsync("refreshToken", data.refreshToken);
 
       // Store the user's profile
       await AsyncStorage.setItem("user", JSON.stringify(data.user));
@@ -70,6 +75,8 @@ const LoginScreen = () => {
       setPassword("");
 
       Alert.alert("Success", "You have logged in successfully.");
+      setIsLoading(false);
+      router.back();
     } catch (error) {
       console.error("Login error:", error);
 
@@ -80,6 +87,7 @@ const LoginScreen = () => {
         "Login Failed",
         "Something went wrong. Please check your connection and try again.",
       );
+      setIsLoading(false);
     }
   };
 
@@ -123,7 +131,9 @@ const LoginScreen = () => {
               onChange={(e) => setPassword(e.nativeEvent.text)}
             />
             <TouchableOpacity onPress={handleLogin} style={styles.loginBtn}>
-              <Text style={styles.loginText}>Login</Text>
+              <Text style={styles.loginText}>
+                {isLoading ? "Loading...." : "Login"}
+              </Text>
             </TouchableOpacity>
           </View>
           <Pressable style={styles.forgotPasswordBtn}>
