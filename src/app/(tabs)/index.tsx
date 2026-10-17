@@ -1,7 +1,10 @@
+import AppText from "@/components/AppText";
 import ThemedContainer from "@/components/ThemedContainer";
+import TransactionPreview from "@/components/TransactionPreview";
 import { Color } from "@/constants/theme";
-import { IPartialUser } from "@/types";
+import { IPartialUser, Transaction } from "@/types";
 import {
+  AntDesign,
   EvilIcons,
   Feather,
   FontAwesome6,
@@ -12,11 +15,12 @@ import * as SecureStore from "expo-secure-store";
 import { useEffect, useState } from "react";
 import {
   Alert,
+  FlatList,
   KeyboardAvoidingView,
   Platform,
+  Pressable,
   ScrollView,
   StyleSheet,
-  Text,
   View,
 } from "react-native";
 
@@ -79,6 +83,45 @@ export default function HomeScreen() {
     },
   ];
 
+  // DEBUG: for static frontend only
+  const transactions: Transaction[] = [
+    {
+      id: "1",
+      title: "Food & Dining",
+      merchant: "Zomato",
+      amount: -320,
+      date: "Today, 1:24 PM",
+    },
+    {
+      id: "2",
+      title: "Shopping",
+      merchant: "Amazon",
+      amount: -1499,
+      date: "Today, 11:05 AM",
+    },
+    {
+      id: "3",
+      title: "Salary",
+      merchant: "Company",
+      amount: 25000,
+      date: "Yesterday, 10:00 AM",
+    },
+    {
+      id: "4",
+      title: "Transportation",
+      merchant: "Uber",
+      amount: -185,
+      date: "Yesterday, 8:30 PM",
+    },
+    {
+      id: "5",
+      title: "Entertainment",
+      merchant: "Netflix",
+      amount: -649,
+      date: "15 Oct, 7:00 PM",
+    },
+  ];
+
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -91,10 +134,12 @@ export default function HomeScreen() {
       >
         <View style={styles.container}>
           <View style={styles.headingView}>
-            <Text style={{ fontSize: 25, fontWeight: 300 }}>Hello,</Text>
-            <Text style={styles.nameHeading}>{user?.name || "User"}!</Text>
-            <Text style={styles.subtitle}>Keep track of your money,</Text>
-            <Text style={styles.subtitle}>build your goals.</Text>
+            <AppText style={{ fontSize: 25, fontWeight: 300 }}>Hello,</AppText>
+            <AppText style={styles.nameHeading}>
+              {user?.name || "User"}!
+            </AppText>
+            <AppText style={styles.subtitle}>Keep track of your money,</AppText>
+            <AppText style={styles.subtitle}>build your goals.</AppText>
           </View>
           <ThemedContainer
             style={{
@@ -113,18 +158,22 @@ export default function HomeScreen() {
                 alignItems: "baseline",
               }}
             >
-              <Text style={{ fontSize: 12 }}>Total Balance</Text>
-              <Text
+              <AppText style={{ fontSize: 12 }}>Total Balance</AppText>
+              <AppText
                 style={{ fontSize: 20, fontWeight: 800, color: Color.money }}
               >
                 ₹12,000
-              </Text>
+              </AppText>
             </View>
           </ThemedContainer>
+          {/* Action Buttons */}
           <ScrollView
             horizontal
+            nestedScrollEnabled
             showsHorizontalScrollIndicator={false}
+            directionalLockEnabled
             contentContainerStyle={styles.grid}
+            style={{ flexGrow: 0, flexShrink: 0 }}
           >
             {optionsData.map((item, key) => (
               <ThemedContainer
@@ -154,7 +203,7 @@ export default function HomeScreen() {
                 >
                   {item.icon}
                 </View>
-                <Text
+                <AppText
                   style={{
                     fontSize: 10,
                     fontWeight: "bold",
@@ -162,10 +211,68 @@ export default function HomeScreen() {
                   }}
                 >
                   {item.text}
-                </Text>
+                </AppText>
               </ThemedContainer>
             ))}
           </ScrollView>
+          {/* Recent Transactions */}
+          <View style={styles.recentTranView}>
+            <Pressable
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                justifyContent: "space-between",
+              }}
+              onPress={() => {
+                Alert.alert("View More", "More...");
+              }}
+            >
+              <AppText
+                style={{
+                  fontFamily: "Inter_700Bold",
+                  // fontWeight: "bold",
+                  fontSize: 20,
+                  color: "#232323",
+                }}
+              >
+                Recent Transactions
+              </AppText>
+              <View
+                style={{ flexDirection: "row", alignItems: "center", gap: 3 }}
+              >
+                <AppText
+                  style={{
+                    color: Color.primary,
+                    textDecorationLine: "underline",
+                  }}
+                >
+                  View More
+                </AppText>
+                <AntDesign name="arrow-right" size={12} color={Color.primary} />
+              </View>
+            </Pressable>
+          </View>
+          <FlatList
+            data={transactions}
+            keyExtractor={(item) => item.id}
+            renderItem={({ item }) => (
+              <TransactionPreview
+                title={item.title}
+                merchant={item.merchant}
+                amount={item.amount}
+                date={item.date}
+              />
+            )}
+            scrollEnabled={false}
+            ItemSeparatorComponent={() => (
+              <View
+                style={{
+                  height: 1,
+                  backgroundColor: "#F0F0F0",
+                }}
+              />
+            )}
+          />
         </View>
       </ScrollView>
     </KeyboardAvoidingView>
@@ -175,23 +282,20 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   body: {
     flex: 1,
-    width: "100%",
-    height: "100%",
-    backgroundColor: Color.primary,
-    justifyContent: "center",
-    alignItems: "flex-end",
-    flexDirection: "row",
+    backgroundColor: "#fff",
   },
+
   scrollContent: {
     flexGrow: 1,
-    justifyContent: "flex-end",
-    alignItems: "center",
-    paddingTop: 20,
+    alignItems: "stretch",
   },
+
   container: {
     width: "100%",
-    height: "95%",
+    flexGrow: 1,
+    flexDirection: "column",
     backgroundColor: "#fff",
+    justifyContent: "flex-start",
     padding: 15,
   },
   headingView: {
@@ -239,7 +343,10 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     gap: 10,
     alignItems: "center",
-    height: 150,
+    maxHeight: 150,
     marginTop: 10,
+  },
+  recentTranView: {
+    marginTop: 20,
   },
 });
