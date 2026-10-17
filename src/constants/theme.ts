@@ -5,4 +5,5 @@ export const Color = {
   subtitle: "#aaa",
   money: "#36d736",
   account: "#0062ff",
+  budget: "#e25b02",
 };

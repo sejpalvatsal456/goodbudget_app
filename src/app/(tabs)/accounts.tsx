@@ -1,0 +1,9 @@
+import { Text, View } from "react-native";
+
+export default function TransactionsScreen() {
+  return (
+    <View style={{ flex: 1, padding: 20 }}>
+      <Text>Accounts</Text>
+    </View>
+  );
+}

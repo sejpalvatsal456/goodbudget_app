@@ -1,7 +1,12 @@
 import ThemedContainer from "@/components/ThemedContainer";
 import { Color } from "@/constants/theme";
 import { IPartialUser } from "@/types";
-import { FontAwesome6, SimpleLineIcons } from "@expo/vector-icons";
+import {
+  EvilIcons,
+  Feather,
+  FontAwesome6,
+  SimpleLineIcons,
+} from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as SecureStore from "expo-secure-store";
 import { useEffect, useState } from "react";
@@ -60,8 +65,18 @@ export default function HomeScreen() {
       text: "View Accounts",
       action: () => Alert.alert("View Accounts"),
     },
-    {},
-    {},
+    {
+      theme: Color.money,
+      icon: <Feather name="pie-chart" size={14} color="white" />,
+      text: "Get Summary",
+      action: () => Alert.alert("Get Summary"),
+    },
+    {
+      theme: Color.budget,
+      icon: <EvilIcons name="chart" size={16} color="white" />,
+      text: "Set the Budget",
+      action: () => Alert.alert("Set the Budget"),
+    },
   ];
 
   return (
@@ -174,11 +189,9 @@ const styles = StyleSheet.create({
     paddingTop: 20,
   },
   container: {
-    width: "85%",
+    width: "100%",
     height: "95%",
     backgroundColor: "#fff",
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
     padding: 15,
   },
   headingView: {
