@@ -11,6 +11,7 @@ import {
   SimpleLineIcons,
 } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { router } from "expo-router";
 import * as SecureStore from "expo-secure-store";
 import { useEffect, useState } from "react";
 import {
@@ -25,17 +26,24 @@ import {
 } from "react-native";
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL as string;
-// console.log("API_URL: " + API_URL);
 
 export default function HomeScreen() {
   const [isLogin, setIsLogin] = useState(false);
+  const [totalBalance, setTotalBalance] = useState<number | null>(null);
   const [user, setUser] = useState<IPartialUser | null>(null);
 
-  // TODO: build a login to check if the access TOken is valid or invalid or expired.
+  // TODO: build a login to check if the access Token is valid or invalid or expired.
   useEffect(() => {
-    SecureStore.getItemAsync("accessToken").then((res) => {
-      res === null ? setIsLogin(false) : setIsLogin(true);
-    });
+    Alert.alert("useEffect has been called.");
+    SecureStore.getItemAsync("accessToken")
+      .then((res) => {
+        res === null ? setIsLogin(false) : setIsLogin(true);
+        // console.log(res);
+      })
+      .catch((err) => {
+        console.error(err);
+        Alert.alert("Can not access accessToken");
+      });
     AsyncStorage.getItem("user").then((data) => {
       if (data !== null) {
         const parsedData = JSON.parse(data);
@@ -52,8 +60,33 @@ export default function HomeScreen() {
     });
   }, []);
 
+  useEffect(() => {
+    if (user) {
+      SecureStore.getItemAsync("accessToken").then((res) => {
+        if (res === null) {
+          // Alert.alert("Auth Error", "Login session is expired.");
+          AsyncStorage.removeItem("user");
+          SecureStore.deleteItemAsync("accessToken");
+          setUser(null);
+          return;
+        }
+        fetch(`${API_URL}/users/getBalance`, {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${res}`,
+          },
+        })
+          .then((res) => res.json())
+          .then((data) => setTotalBalance(data.balance));
+      });
+    }
+  }, [user]);
+
   const handleLogout = async () => {
     await SecureStore.deleteItemAsync("accessToken");
+    AsyncStorage.removeItem("user");
+    setUser(null);
+    setIsLogin(false);
   };
 
   const optionsData = [
@@ -134,12 +167,39 @@ export default function HomeScreen() {
       >
         <View style={styles.container}>
           <View style={styles.headingView}>
-            <AppText style={{ fontSize: 25, fontWeight: 300 }}>Hello,</AppText>
-            <AppText style={styles.nameHeading}>
-              {user?.name || "User"}!
-            </AppText>
-            <AppText style={styles.subtitle}>Keep track of your money,</AppText>
-            <AppText style={styles.subtitle}>build your goals.</AppText>
+            <View>
+              <AppText style={{ fontSize: 25, fontWeight: 300 }}>
+                Hello,
+              </AppText>
+              <AppText style={styles.nameHeading}>
+                {user?.name || "User"}!
+              </AppText>
+              <AppText style={styles.subtitle}>
+                Keep track of your money,
+              </AppText>
+              <AppText style={styles.subtitle}>build your goals.</AppText>
+            </View>
+            <View>
+              <Pressable
+                style={{
+                  backgroundColor: Color.primary,
+                  paddingVertical: 10,
+                  paddingHorizontal: 15,
+                  borderRadius: 10,
+                }}
+                onPress={() => {
+                  if (isLogin) {
+                    handleLogout();
+                  } else {
+                    router.push("/login");
+                  }
+                }}
+              >
+                <AppText style={{ color: Color.secondary }}>
+                  {isLogin ? "Logout" : "Login"}
+                </AppText>
+              </Pressable>
+            </View>
           </View>
           <ThemedContainer
             style={{
@@ -160,9 +220,13 @@ export default function HomeScreen() {
             >
               <AppText style={{ fontSize: 12 }}>Total Balance</AppText>
               <AppText
-                style={{ fontSize: 20, fontWeight: 800, color: Color.money }}
+                style={{
+                  fontSize: 20,
+                  fontWeight: 800,
+                  color: Color.money,
+                }}
               >
-                ₹12,000
+                ₹{totalBalance ? totalBalance : "-"}
               </AppText>
             </View>
           </ThemedContainer>
@@ -302,6 +366,8 @@ const styles = StyleSheet.create({
     backgroundColor: "#a000",
     marginTop: 20,
     marginLeft: 10,
+    flexDirection: "row",
+    justifyContent: "space-between",
   },
   nameHeading: {
     fontWeight: 800,

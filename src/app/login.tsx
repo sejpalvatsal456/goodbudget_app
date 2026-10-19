@@ -76,7 +76,7 @@ const LoginScreen = () => {
 
       Alert.alert("Success", "You have logged in successfully.");
       setIsLoading(false);
-      router.back();
+      router.push("/");
     } catch (error) {
       console.error("Login error:", error);
 
@@ -104,7 +104,7 @@ const LoginScreen = () => {
         <View style={styles.container}>
           <Pressable
             onPress={() => {
-              router.back();
+              router.push("/");
             }}
             style={styles.closeBtn}
           >
@@ -172,7 +172,7 @@ const styles = StyleSheet.create({
     paddingTop: 20,
   },
   container: {
-    width: "80%",
+    width: "90%",
     height: "90%",
     backgroundColor: "#fff",
     borderTopLeftRadius: 24,
