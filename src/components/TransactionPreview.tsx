@@ -1,32 +1,34 @@
 import { StyleProp, StyleSheet, Text, View, ViewStyle } from "react-native";
 
 type TransactionPreviewProps = {
-  title: string;
+  desc: string;
   merchant: string;
   amount: number;
   date: string;
+  type: "income" | "expense";
   style?: StyleProp<ViewStyle>;
 };
 
 export default function TransactionPreview({
-  title,
+  desc,
   merchant,
   amount,
   date,
+  type,
   style,
 }: TransactionPreviewProps) {
-  const isExpense = amount < 0;
+  const isExpense = type === "expense";
 
   return (
     <View style={[styles.container, style]}>
       {/* Transaction details */}
       <View style={styles.details}>
         <Text style={styles.title} numberOfLines={1}>
-          {title}
+          {merchant}
         </Text>
 
-        <Text style={styles.merchant} numberOfLines={1}>
-          {merchant}
+        <Text style={styles.desc} numberOfLines={1}>
+          {desc}
         </Text>
       </View>
 
@@ -78,7 +80,7 @@ const styles = StyleSheet.create({
     color: "#18213B",
   },
 
-  merchant: {
+  desc: {
     fontFamily: "Inter_400Regular",
     fontSize: 13,
     color: "#78849D",

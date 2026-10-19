@@ -7,7 +7,8 @@ export interface IPartialUser {
 
 export type Transaction = {
   id: string;
-  title: string;
+  desc: string;
+  type: "income" | "expense";
   merchant: string;
   amount: number;
   date: string;

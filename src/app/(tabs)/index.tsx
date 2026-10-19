@@ -31,10 +31,11 @@ export default function HomeScreen() {
   const [isLogin, setIsLogin] = useState(false);
   const [totalBalance, setTotalBalance] = useState<number | null>(null);
   const [user, setUser] = useState<IPartialUser | null>(null);
+  const [transactions, setTransactions] = useState<Transaction[] | null>(null);
 
   // TODO: build a login to check if the access Token is valid or invalid or expired.
   useEffect(() => {
-    Alert.alert("useEffect has been called.");
+    // Alert.alert("useEffect has been called.");
     SecureStore.getItemAsync("accessToken")
       .then((res) => {
         res === null ? setIsLogin(false) : setIsLogin(true);
@@ -78,6 +79,35 @@ export default function HomeScreen() {
         })
           .then((res) => res.json())
           .then((data) => setTotalBalance(data.balance));
+
+        fetch(`${API_URL}/transactions`, {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${res}`,
+          },
+        })
+          .then((res) => {
+            console.log("Status: " + res.status);
+            return res.json();
+          })
+          .then((data) => {
+            console.log(data);
+            if (data.msg === "ok") {
+              const mappedTransactions: Transaction[] = data.result.map(
+                (item: any) => ({
+                  id: item.tran_id,
+                  desc: item.tran_desc,
+                  merchant: item.tran_merchant,
+                  amount: Number(item.tran_amount),
+                  type: item.tran_type,
+                  date: item.tran_date,
+                }),
+              );
+
+              setTransactions(mappedTransactions);
+            }
+          })
+          .catch((err) => console.log(err));
       });
     }
   }, [user]);
@@ -117,43 +147,43 @@ export default function HomeScreen() {
   ];
 
   // DEBUG: for static frontend only
-  const transactions: Transaction[] = [
-    {
-      id: "1",
-      title: "Food & Dining",
-      merchant: "Zomato",
-      amount: -320,
-      date: "Today, 1:24 PM",
-    },
-    {
-      id: "2",
-      title: "Shopping",
-      merchant: "Amazon",
-      amount: -1499,
-      date: "Today, 11:05 AM",
-    },
-    {
-      id: "3",
-      title: "Salary",
-      merchant: "Company",
-      amount: 25000,
-      date: "Yesterday, 10:00 AM",
-    },
-    {
-      id: "4",
-      title: "Transportation",
-      merchant: "Uber",
-      amount: -185,
-      date: "Yesterday, 8:30 PM",
-    },
-    {
-      id: "5",
-      title: "Entertainment",
-      merchant: "Netflix",
-      amount: -649,
-      date: "15 Oct, 7:00 PM",
-    },
-  ];
+  // const transactions: Transaction[] = [
+  //   {
+  //     id: "1",
+  //     title: "Food & Dining",
+  //     merchant: "Zomato",
+  //     amount: -320,
+  //     date: "Today, 1:24 PM",
+  //   },
+  //   {
+  //     id: "2",
+  //     title: "Shopping",
+  //     merchant: "Amazon",
+  //     amount: -1499,
+  //     date: "Today, 11:05 AM",
+  //   },
+  //   {
+  //     id: "3",
+  //     title: "Salary",
+  //     merchant: "Company",
+  //     amount: 25000,
+  //     date: "Yesterday, 10:00 AM",
+  //   },
+  //   {
+  //     id: "4",
+  //     title: "Transportation",
+  //     merchant: "Uber",
+  //     amount: -185,
+  //     date: "Yesterday, 8:30 PM",
+  //   },
+  //   {
+  //     id: "5",
+  //     title: "Entertainment",
+  //     merchant: "Netflix",
+  //     amount: -649,
+  //     date: "15 Oct, 7:00 PM",
+  //   },
+  // ];
 
   return (
     <KeyboardAvoidingView
@@ -321,9 +351,10 @@ export default function HomeScreen() {
             keyExtractor={(item) => item.id}
             renderItem={({ item }) => (
               <TransactionPreview
-                title={item.title}
+                desc={item.desc}
                 merchant={item.merchant}
                 amount={item.amount}
+                type={item.type}
                 date={item.date}
               />
             )}
